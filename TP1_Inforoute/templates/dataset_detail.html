@@ -1,0 +1,261 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- En-tête avec titre -->
+    <div class="d-flex align-items-start mb-4">
+        <i class="bi bi-info-circle-fill text-primary me-3" style="font-size: 2.5rem;"></i>
+        <div>
+            <h2 class="mb-1">{{ dataset.title }}</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Colonne principale -->
+        <div class="col-lg-8">
+            <!-- Description -->
+            {% if dataset.notes %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-file-text me-2"></i>Description
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ dataset.notes|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Informations de contact -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-person-lines-fill me-2"></i>Contacts et responsables
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Auteur -->
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary">
+                                <i class="bi bi-person-circle me-2"></i>Auteur
+                            </h6>
+                            <p class="mb-1">
+                                <strong>{{ dataset.author|default:"Non spécifié" }}</strong>
+                            </p>
+                            {% if dataset.author_email %}
+                            <p class="mb-0">
+                                <i class="bi bi-envelope me-1"></i>
+                                <a href="mailto:{{ dataset.author_email }}">{{ dataset.author_email }}</a>
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tags et Groupes -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <i class="bi bi-tags-fill me-2"></i>Classification
+                </div>
+                <div class="card-body">
+                    <!-- Tags -->
+                    <div class="mb-3">
+                        <h6 class="text-secondary">
+                            <i class="bi bi-tag me-2"></i>Tags
+                        </h6>
+                        {% if dataset.tags %}
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for tag in dataset.tags %}
+                                    <span class="badge bg-secondary">{{ tag.display_name }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">Aucun tag</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Groupes -->
+                    {% if dataset.groups %}
+                    <div>
+                        <h6 class="text-secondary">
+                            <i class="bi bi-collection me-2"></i>Groupes
+                        </h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for group in dataset.groups %}
+                                <span class="badge bg-info">{{ group.display_name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne latérale -->
+        <div class="col-lg-4">
+            <!-- Organisation -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-building me-2"></i>Organisation
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ dataset.organization_title|default:"Non spécifiée" }}</h6>
+                    {% if dataset.organization_id %}
+                    <p class="card-text small text-muted mb-0">
+                        ID: {{ dataset.organization_id }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Dates -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <i class="bi bi-calendar-event me-2"></i>Dates
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Création</small>
+                        <strong>
+                            {% if dataset.metadata_created %}
+                                {{ dataset.metadata_created|date:"d/m/Y à H:i" }}
+                            {% else %}
+                                Non disponible
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Dernière modification</small>
+                        <strong>
+                            {% if dataset.metadata_modified %}
+                                {{ dataset.metadata_modified|date:"d/m/Y à H:i" }}
+                            {% else %}
+                                Non disponible
+                            {% endif %}
+                        </strong>
+                    </div>
+                    {% if dataset.temporal %}
+                    <div class="mb-3">
+                        <small class="text-muted d-block">
+                            <i class="bi bi-clock-history me-1"></i>Temporalité
+                        </small>
+                        <strong>{{ dataset.temporal }}</strong>
+                    </div>
+                    {% endif %}
+                    {% if dataset.update_frequency %}
+                    <div>
+                        <small class="text-muted d-block">
+                            <i class="bi bi-arrow-repeat me-1"></i>Fréquence de mise à jour
+                        </small>
+                        <strong>{{ dataset.update_frequency }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Licence -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header" style="background-color: #6f42c1; color: white;">
+                    <i class="bi bi-shield-check me-2"></i>Licence
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ dataset.license_title|default:"Non spécifiée" }}</h6>
+                    {% if dataset.license_id %}
+                    <p class="card-text small text-muted">ID: {{ dataset.license_id }}</p>
+                    {% endif %}
+                    {% if dataset.license_url %}
+                    <a href="{{ dataset.license_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Voir la licence
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Métadonnées -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <i class="bi bi-gear me-2"></i>Métadonnées
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted d-block">
+                            <i class="bi bi-toggle-on me-1"></i>État
+                        </small>
+                        <span class="badge {% if dataset.state == 'active' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ dataset.state|default:"Inconnu" }}
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">
+                            <i class="bi bi-eye-slash me-1"></i>Privé
+                        </small>
+                        <span class="badge {% if dataset.private %}bg-danger{% else %}bg-success{% endif %}">
+                            {% if dataset.private %}Oui{% else %}Non{% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">
+                            <i class="bi bi-tag me-1"></i>Nom technique
+                        </small>
+                        <code class="small">{{ dataset.name }}</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+<!-- Ressources / Fichiers disponibles -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header text-white" style="background-color: #003366;">
+        <i class="bi bi-file-earmark-arrow-down me-2"></i>
+        <strong>Ressources disponibles</strong>
+    </div>
+    <div class="card-body">
+        {% if resources %}
+            <div class="list-group">
+                {% for res in resources %}
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start mb-2 border rounded">
+                    <div class="ms-2 me-auto">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-file-earmark-text text-primary me-2" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h6 class="mb-0">{{ res.name }}</h6>
+                                <span class="badge bg-info mt-1">{{ res.format|upper }}</span>
+                            </div>
+                        </div>
+                        {% if res.description %}
+                        <p class="mb-2 text-muted small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            {{ res.description }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div class="text-end">
+                        <a href="{{ res.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-folder2-open"></i> Télécharger/Ouvrir
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info d-flex align-items-center mb-0" role="alert">
+                <i class="bi bi-info-circle-fill me-3" style="font-size: 1.5rem;"></i>
+                <div>
+                    Aucune ressource associée à ce jeu de données.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+    <!-- Bouton retour -->
+    <div class="text-center mt-4 mb-4">
+        <a href="{% url 'dataset_list' %}" class="btn btn-outline-primary btn-lg">
+            <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+        </a>
+    </div>
+</div>
+{% endblock %}

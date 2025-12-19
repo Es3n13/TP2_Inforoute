@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex align-items-center mb-4">
+        <i class="bi bi-collection-fill text-primary me-3" style="font-size: 2rem;"></i>
+        <h2 class="mb-0">Jeux de données - Québec Données</h2>
+    </div>
+
+    <!-- Barre de recherche et filtres -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" action="{% url 'dataset_list' %}" class="row g-3">
+                <!-- Champ de recherche -->
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text bg-primary text-white">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control" 
+                               name="search" 
+                               placeholder="Rechercher par titre, description, tags ou organisation..."
+                               value="{{ request.GET.search }}"
+                               aria-label="Recherche">
+                        {% if request.GET.search %}
+                        <a href="{% url 'dataset_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Effacer
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Tri -->
+                <div class="col-md-3">
+                    <select name="ordering" class="form-select" onchange="this.form.submit()">
+                        <option value="">Trier par...</option>
+                        <option value="title" {% if request.GET.ordering == 'title' %}selected{% endif %}>
+                            Titre (A-Z)
+                        </option>
+                        <option value="-title" {% if request.GET.ordering == '-title' %}selected{% endif %}>
+                            Titre (Z-A)
+                        </option>
+                        <option value="-metadata_modified" {% if request.GET.ordering == '-metadata_modified' %}selected{% endif %}>
+                            Plus récents
+                        </option>
+                        <option value="metadata_modified" {% if request.GET.ordering == 'metadata_modified' %}selected{% endif %}>
+                            Plus anciens
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Bouton rechercher -->
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Compteur de résultats -->
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    {% if request.GET.search %}
+                        <strong>{{ datasets|length }}</strong> résultat(s) trouvé(s) pour "<strong>{{ request.GET.search }}</strong>"
+                    {% else %}
+                        <strong>{{ datasets|length }}</strong> jeu(x) de données disponible(s)
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grille des datasets -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for d in datasets %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <!-- Titre du dataset -->
+                    <h5 class="card-title">
+                        <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                        {{ d.title|truncatewords:10 }}
+                    </h5>
+
+                    <!-- Description -->
+                    {% if d.notes %}
+                    <p class="card-text text-muted small">
+                        {{ d.notes|truncatewords:15 }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Organisation -->
+                    <p class="card-text d-flex align-items-center mb-2">
+                        {% if d.organization_title %}
+                            <i class="bi bi-building text-secondary me-2"></i>
+                            <small><strong>{{ d.organization_title|truncatewords:5 }}</strong></small>
+                        {% else %}
+                            <i class="bi bi-question-circle text-muted me-2"></i>
+                            <small><strong>Organisation inconnue</strong></small>
+                        {% endif %}
+                    </p>
+
+                    <!-- Date de modification -->
+                    <p class="card-text mb-2">
+                        <i class="bi bi-clock-history text-muted me-2"></i>
+                        <small class="text-muted">
+                            {% if d.metadata_modified %}
+                                {{ d.metadata_modified|date:"d/m/Y" }}
+                            {% else %}
+                                Non disponible
+                            {% endif %}
+                        </small>
+                    </p>
+
+                    <!-- Tags -->
+                    {% if d.tags %}
+                        <div class="mb-2">
+                            <i class="bi bi-tags-fill text-info me-2"></i>
+                            {% for tag in d.tags|slice:":3" %}
+                                <span class="badge bg-secondary me-1">{{ tag }}</span>
+                            {% endfor %}
+                            {% if d.tags|length > 3 %}
+                                <span class="badge bg-light text-dark">+{{ d.tags|length|add:"-3" }}</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Bouton pour voir plus de détails -->
+                <div class="card-footer text-end bg-light">
+                    <a href="{% url 'dataset_detail' d.ckan_id %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-eye me-1"></i>Détails
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning text-center" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Aucun jeu de données ne correspond à votre recherche.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

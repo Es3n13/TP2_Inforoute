@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+    <!-- En-tête -->
+    <div class="d-flex align-items-center justify-content-center mb-4">
+        <i class="bi bi-bar-chart-fill text-primary me-3" style="font-size: 2rem;"></i>
+        <h2 class="mb-0">Statistiques des jeux de données</h2>
+    </div>
+
+<!-- Cartes de métriques clés -->
+<div class="row g-4 mb-4 justify-content-center">
+    <!-- Jeux de données -->
+    <div class="col-md-4 col-lg-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <i class="bi bi-database-fill text-primary" style="font-size: 2.5rem;"></i>
+                <h3 class="mt-3 mb-1">{{ total_datasets }}</h3>
+                <p class="text-muted mb-0">Jeux de données</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Organisations -->
+    <div class="col-md-4 col-lg-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <i class="bi bi-building text-success" style="font-size: 2.5rem;"></i>
+                <h3 class="mt-3 mb-1">{{ total_orgs }}</h3>
+                <p class="text-muted mb-0">Organisations</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mises à jour récentes -->
+    <div class="col-md-4 col-lg-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <i class="bi bi-calendar-check text-info" style="font-size: 2.5rem;"></i>
+                <h3 class="mt-3 mb-1">{{ recent_updates }}</h3>
+                <p class="text-muted mb-0">Mises à jour ce mois</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Graphique : Top organisations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-building me-2"></i>Top 10 - Organisations productrices
+                </div>
+                <div class="card-body" style="height: 450px;">
+                    <canvas id="orgChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique : Répartition par état -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-toggle-on me-2"></i>Répartition par état des jeux
+                </div>
+                <div class="card-body" style="height: 450px;">
+                    <canvas id="stateChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique : Évolution mensuelle -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-graph-up-arrow me-2"></i>Évolution mensuelle de la création des jeux
+                </div>
+                <div class="card-body" style="height: 450px;">
+                    <canvas id="temporalChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique : Fréquence de mise à jour -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <i class="bi bi-arrow-repeat me-2"></i>Fréquence de mise à jour des jeux (depuis la dernière MAJ)
+                </div>
+                <div class="card-body" style="height: 450px;">
+                    <canvas id="freqChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique : Répartition par licence -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header" style="background-color: #20c997; color: white;">
+                    <i class="bi bi-shield-check me-2"></i>Répartition par type de licence
+                </div>
+                <div class="card-body" style="height: 450px;">
+                    <canvas id="licenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique : Confidentialité -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <i class="bi bi-eye-slash me-2"></i>Confidentialité des jeux (Public vs Privé)
+                </div>
+                <div class="card-body" style="height: 450px;">
+                    <canvas id="privateChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartOptionsBase = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    font: { size: 12 }
+                }
+            }
+        }
+    };
+
+    // --- Top 10 Organisations (bar horizontal) ---
+    new Chart(document.getElementById('orgChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ org_labels|safe }},
+            datasets: [{
+                label: 'Nombre de jeux',
+                data: {{ org_values|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            ...chartOptionsBase,
+            indexAxis: 'y',
+            scales: {
+                x: { 
+                    title: { display: true, text: 'Nombre de jeux' }, 
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                },
+                y: { 
+                    title: { display: true, text: 'Organisation' }
+                }
+            },
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.x + ' jeux de données';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // --- État (doughnut avec pourcentages) ---
+    new Chart(document.getElementById('stateChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ state_labels|safe }},
+            datasets: [{
+                data: {{ state_values|safe }},
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d', '#17a2b8'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            ...chartOptionsBase,
+            plugins: { 
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            let value = context.parsed;
+                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            let percentage = ((value / total) * 100).toFixed(1);
+                            return label + ': ' + value + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+
+    // --- Temporal (line avec area) ---
+    new Chart(document.getElementById('temporalChart'), {
+        type: 'line',
+        data: {
+            labels: {{ temporal_labels|safe }},
+            datasets: [{
+                label: 'Jeux créés',
+                data: {{ temporal_values|safe }},
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255,99,132,1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            ...chartOptionsBase,
+            scales: {
+                x: { 
+                    title: { display: true, text: 'Période' },
+                    grid: { display: false }
+                },
+                y: { 
+                    title: { display: true, text: 'Nombre de jeux créés' }, 
+                    beginAtZero: true,
+                    ticks: { stepSize: 5 }
+                }
+            },
+            plugins: { 
+                legend: { position: 'top' }
+            }
+        }
+    });
+
+    // --- Fréquence (bar) ---
+    new Chart(document.getElementById('freqChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ freq_labels|safe }},
+            datasets: [{
+                label: 'Nombre de jeux',
+                data: {{ freq_values|safe }},
+                backgroundColor: 'rgba(108, 117, 125, 0.7)',
+                borderColor: 'rgba(108, 117, 125, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            ...chartOptionsBase,
+            scales: {
+                x: { 
+                    title: { display: true, text: 'Jours' }
+                },
+                y: { 
+                    title: { display: true, text: 'Nombre de jeux' }, 
+                    beginAtZero: true
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // --- Licences (pie) ---
+    new Chart(document.getElementById('licenseChart'), {
+        type: 'pie',
+        data: {
+            labels: {{ license_labels|safe }},
+            datasets: [{
+                data: {{ license_values|safe }},
+                backgroundColor: ['#20c997', '#0d6efd', '#ffc107', '#dc3545', '#6c757d'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            ...chartOptionsBase,
+            plugins: { 
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            let value = context.parsed;
+                            let total = context.dataset.data.reduce((a,b) => a+b,0);
+                            let pct = ((value/total)*100).toFixed(1);
+                            return `${label}: ${value} (${pct}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {}
+        }
+    });
+
+    // --- Public vs Privé (doughnut) ---
+    new Chart(document.getElementById('privateChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Public', 'Privé'],
+            datasets: [{
+                data: [{{ public_count }}, {{ private_count }}],
+                backgroundColor: ['#198754', '#6c757d'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            ...chartOptionsBase,
+            plugins: { 
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            let value = context.parsed;
+                            let total = context.dataset.data.reduce((a,b) => a+b,0);
+                            let pct = ((value/total)*100).toFixed(1);
+                            return `${label}: ${value} (${pct}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {} // pas d'axes
+        }
+    });
+</script>
+{% endblock %}

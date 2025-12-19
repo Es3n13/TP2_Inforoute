@@ -1,0 +1,7 @@
+Django>=5.0
+djangorestframework
+drf-yasg
+graphene-django
+django-filter
+gunicorn
+requests
